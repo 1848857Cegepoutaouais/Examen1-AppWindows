@@ -1,5 +1,6 @@
 ﻿using ChocolaterieDeWilly.Enumerations;
 using ChocolaterieDeWilly.ExceptionsPersonnalisees;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChocolaterieDeWilly.Models
 {
@@ -85,7 +86,13 @@ namespace ChocolaterieDeWilly.Models
         /// <param name="dateLimite">La date avant laquelle le lot doit être fabriqué.</param>
         public void PlanifierLot(string nom, int quantite, Masse poidsUnitaire, DateTime dateLimite)
         {
+            int nbLot = _prochainNumeroLot;
 
+            LotProduction lot = new LotProduction(nbLot, nom, quantite, poidsUnitaire, dateLimite);
+
+            Lots.Add(lot);
+            _prochainNumeroLot += 1;
+            
         }
 
         /// <summary>
@@ -144,6 +151,9 @@ namespace ChocolaterieDeWilly.Models
             {
                 throw new ReserveInsuffisanteException("La réserve de chocolat est insuffisante.");
             }
+
+            // l'érreur vient du fait qu'on a pas update la quantité
+            lot.Creation.Quantite = nouvelleQuantite;
 
         }
 
@@ -221,6 +231,9 @@ namespace ChocolaterieDeWilly.Models
             ReserveChocolat = new Masse(ReserveChocolat.Valeur - requisConverti.Valeur, ReserveChocolat.Unite);
 
             CacherTickets(lot);
+
+            // L'érreur vient du fait qu'on ne change pas le statut du lot à terminé
+            lot.Statut = StatutLot.Termine;
         }
 
         /// <summary>
@@ -303,6 +316,37 @@ namespace ChocolaterieDeWilly.Models
         /// <param name="lot">Le lot qui vient d'être terminé.</param>
         private void CacherTickets(LotProduction lot)
         {
+            if (TicketsCaches < 5)
+            {
+                int quantComptee = 0;
+                do
+                {
+                    int nbToTichet = IntervalleTicket - (_compteurUnites % IntervalleTicket);
+
+                    if (nbToTichet > lot.Creation.Quantite)
+                    {
+                        TicketsCaches++;
+                        lot.AjouterTicket(TicketsCaches);
+                    }
+                    quantComptee = nbToTichet;
+                } while (lot.Creation.Quantite > IntervalleTicket + quantComptee);
+                
+
+                //for (int i = 1; i <= lot.Creation.Quantite; i++)
+                /*{ 
+                    int compteurTichet = TicketsCaches * IntervalleTicket;
+                  _compteurUnites++;
+                if (_compteurUnites == compteurTichet)
+                    {
+                        TicketsCaches++;
+                        lot.AjouterTicket(TicketsCaches);
+                        if (TicketsCaches == 5)
+                        {
+                            break;
+                        }
+                    }
+                }*/
+            }
         }
     }
 }

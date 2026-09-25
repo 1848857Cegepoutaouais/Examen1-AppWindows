@@ -41,7 +41,14 @@ namespace ChocolaterieDeWilly.Models
         public int QuantiteInvendue
         {
             get { return _quantiteInvendue; }
-            set  { _quantiteInvendue = value; }
+            set
+            {
+                if (0 > value || value > Creation.Quantite)
+                {
+                    throw new ArgumentException("La quantité invewndu ne peut pas être plus grand que la quantité du lot");
+                }
+                else { _quantiteInvendue = value; }
+            }
         }
 
 
